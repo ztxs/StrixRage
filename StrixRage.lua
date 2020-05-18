@@ -7,7 +7,7 @@ print("StrixRage has been successfully loaded")
 
 ------------------------------------ Auto Update
 
-local CURRENTVERSION = "1.3"
+local CURRENTVERSION = "1.4"
 local LATESTVERSION = http.Get("https://raw.githubusercontent.com/ztxs/StrixRage/master/CurrentVersion.txt")
 local function Update() 
     if CURRENTVERSION ~= LATESTVERSION then
