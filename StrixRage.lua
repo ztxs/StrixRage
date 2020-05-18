@@ -48,11 +48,11 @@ local StrixLua_CHANGELOG_TEXT = gui.Text(StrixRage_CHANGELOG_GBOX, http.Get("htt
 
 -- windowss
 
-local StrixRage_RAGE_GBOX = gui.Groupbox(StrixRage_TAB, "Rage", 10, 10, 220, 0)
+local StrixRage_RAGE_GBOX = gui.Groupbox(StrixRage_TAB, "Manual AA", 290, 10, 145, 0)
 
 -- autobuy
 local ref = gui.Reference("Ragebot", "StrixRage"); 
-local Group = gui.Groupbox(ref, "Autobuy", 327, 10, 297)
+local Group = gui.Groupbox(ref, "Autobuy", 450, 10, 160)
 local checkbox_buybot = gui.Checkbox( Group, "Checkbox", "BuyBot Active",  false)
 local primary_guns = gui.Combobox( Group, "primary", "Primary", "Off", "Scar-20 | G3SG1","AK47 | M4A1", "SSG-08", "AWP", "SG553 | AUG")
 local secondary_guns = gui.Combobox( Group, "Secondary", "Secondary",  "Off", "Dual Berettas", "Deagle | Revolver", "P250","TEC-9 | CZ75-Auto" )
@@ -91,3 +91,177 @@ local function Events( event )
   end
           end
 callbacks.Register( "FireGameEvent", Events)
+
+--------- manual aa
+
+local gui_set = gui.SetValue;
+local gui_get = gui.GetValue;
+local LeftKey = 0;
+local BackKey = 0;
+local RightKey = 0;
+local UpKey = 0;
+local rage_ref = gui.Reference("Ragebot", "StrixRage", "Manual AA");
+local check_indicator = gui.Checkbox(rage_ref, "manual", "Manual AA", false)
+local manual_left = gui.Keybox(rage_ref, "manual_left", "Left Keybind", 0);
+local manual_right = gui.Keybox(rage_ref, "manual_right", "Right Keybind", 0);
+local manual_back = gui.Keybox(rage_ref, "manual_back", "Back Keybind", 0);
+local manual_up = gui.Keybox(rage_ref, "manual_up", "Up Keybind", 0);
+
+-- Fonts
+local text_font = draw.CreateFont("Verdana", 20, 700)
+local arrow_font = draw.CreateFont("Marlett", 35, 700)
+
+local function main()
+    if manual_left:GetValue() ~= 0 then
+        if input.IsButtonPressed(manual_left:GetValue()) then
+            LeftKey = LeftKey + 1;
+            BackKey = 0;
+            RightKey = 0;
+            UpKey = 0;
+        end
+    end
+    if manual_back:GetValue() ~= 0 then
+        if input.IsButtonPressed(manual_back:GetValue()) then
+            BackKey = BackKey + 1;
+            LeftKey = 0;
+            RightKey = 0;
+            UpKey = 0;
+        end
+    end
+    if manual_right:GetValue() ~= 0 then
+        if input.IsButtonPressed(manual_right:GetValue()) then
+            RightKey = RightKey + 1;
+            LeftKey = 0;
+            BackKey = 0;
+            UpKey = 0;
+        end
+    end
+    if manual_up:GetValue() ~= 0 then
+        if input.IsButtonPressed(manual_up:GetValue()) then
+            UpKey = UpKey + 1;
+            LeftKey = 0;
+            BackKey = 0;
+            RightKey = 0;
+        end
+    end
+end
+
+
+function CountCheck()
+   if ( LeftKey == 1 ) then
+        BackKey = 0;
+        RightKey = 0;
+        UpKey = 0;
+   elseif ( BackKey == 1 ) then
+        LeftKey = 0;
+        RightKey = 0;
+        UpKey = 0;
+    elseif ( RightKey == 1 ) then
+        LeftKey = 0;
+        BackKey = 0;
+        UpKey = 0;
+    elseif ( UpKey == 1 ) then
+        LeftKey = 0;
+        BackKey = 0;
+        RightKey = 0;
+    elseif ( LeftKey == 2 ) then
+        LeftKey = 0;
+        BackKey = 0;
+        RightKey = 0;
+        UpKey = 0;
+   elseif ( BackKey == 2 ) then
+        LeftKey = 0;
+        BackKey = 0;
+        RightKey = 0;
+        UpKey = 0;
+   elseif ( RightKey == 2 ) then
+        LeftKey = 0;
+        BackKey = 0;
+        RightKey = 0;
+        UpKey = 0;
+   elseif ( UpKey == 2 ) then
+        LeftKey = 0;
+        BackKey = 0;
+        RightKey = 0;
+        UpKey = 0;
+   end 
+end
+
+function SetLeft()
+   gui_set("rbot.antiaim.base", 90);
+   gui_set("rbot.antiaim.advanced.autodir", 0);
+end
+
+function SetBackWard()
+   gui_set("rbot.antiaim.base", 180);
+   gui_set("rbot.antiaim.advanced.autodir", 0);
+end
+
+function SetRight()
+   gui_set("rbot.antiaim.base", -90);
+   gui_set("rbot.antiaim.advanced.autodir", 0);
+end
+
+function SetUp()
+   gui_set("rbot.antiaim.base", 0);
+   gui_set("rbot.antiaim.advanced.autodir", 0);
+end
+
+function SetAuto()
+   gui_set("rbot.antiaim.base", 180);
+   gui_set("rbot.antiaim.advanced.autodir", 1);
+end
+
+function draw_indicator()
+    local active = check_indicator:GetValue()
+    if active then
+        local w, h = draw.GetScreenSize();
+        draw.SetFont(text_font);
+        if (LeftKey == 1) then
+            SetLeft();
+            draw.Color(255, 255, 255);
+            draw.Text(15, h - 560, "left");
+            draw.TextShadow(15, h - 560, "left");
+            draw.SetFont(arrow_font);
+            draw.Text( w/2 - 60, h/2 - 16, "3");
+            draw.TextShadow( w/2 - 60, h/2 - 16, "3");
+            draw.SetFont(text_font);
+        elseif (BackKey == 1) then
+            SetBackWard();
+            draw.Color(255, 255, 255);
+            draw.Text(15, h - 560, "back");
+            draw.TextShadow(15, h - 560, "back");
+            draw.SetFont(arrow_font);
+            draw.Text( w/2 - 17, h/2 + 33, "6");
+            draw.TextShadow( w/2 - 17, h/2 + 33, "6");
+            draw.SetFont(text_font);
+        elseif (RightKey == 1) then
+            SetRight();
+            draw.Color(255, 255, 255);
+            draw.Text(15, h - 560, "right");
+            draw.TextShadow(15, h - 560, "right");
+            draw.SetFont(arrow_font);
+            draw.Text( w/2 + 30, h/2 - 16, "4");
+            draw.TextShadow( w/2 + 30, h/2 - 16, "4");
+            draw.SetFont(text_font);
+        elseif (UpKey == 1) then
+            SetUp();
+            draw.Color(255, 255, 255);
+            draw.Text(15, h - 560, "up");
+            draw.TextShadow(15, h - 560, "up");
+            draw.SetFont(arrow_font);
+            draw.Text( w/2 - 17, h/2 + -66, "5");
+            draw.TextShadow( w/2 - 17, h/2 + -66, "5");
+            draw.SetFont(text_font);
+        elseif ((LeftKey == 0) and (BackKey == 0) and (RightKey == 0) and (UpKey == 0)) then
+            SetAuto();
+            draw.Color(255, 255, 255);
+            draw.Text(15, h - 560, "auto");
+            draw.TextShadow(15, h - 560, "auto");
+        end
+    end
+end
+
+callbacks.Register( "Draw", "main", main);
+callbacks.Register( "Draw", "CountCheck", CountCheck);
+callbacks.Register( "Draw", "draw_indicator", draw_indicator);
