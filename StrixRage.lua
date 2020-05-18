@@ -54,8 +54,6 @@ local StrixRage_RAGE_GBOX = gui.Groupbox(StrixRage_TAB, "Manual AA", 260, 14, 14
 local StrixRage_VISUALS_GBOX = gui.Groupbox(StrixRage_TAB, "Visuals", 260, 340, 145, 0)
 
 
-local StrixRage_MOVEMENT_GBOX = gui.Groupbox(StrixRage_TAB, "Movement", 20, 450, 180, 0)
-
 -- autobuy
 local ref = gui.Reference("Ragebot", "StrixRage"); 
 local Group = gui.Groupbox(ref, "Autobuy", 450, 14, 160)
@@ -522,3 +520,27 @@ local function create_move(cmd)
 end
 
 callbacks.Register( "CreateMove", create_move );
+
+---- fakelag
+
+local ref = gui.Reference("Ragebot", "StrixRage")
+
+-- BOXES
+local main_box = gui.Groupbox(ref, "Fakelag Settings",20, 450, 165, 400);
+
+
+--sliders
+local limit = gui.Slider(main_box, "limit", "Limit", 0, 0, 8);
+local freq = gui.Slider(main_box, "frequency", "Frequency", 0, 1, 100);
+local center = gui.Slider(main_box, "center", "Center", 0, 2, 17);
+
+
+--vars
+
+local function jitter_fakelag()
+	maths = (gui.GetValue("misc.limit") * math.cos((globals.RealTime()) / (gui.GetValue("misc.frequency")*(0.01)))+ gui.GetValue("misc.center"));
+	gui.SetValue("misc.fakelag.factor", maths)
+end
+
+
+callbacks.Register("Draw", jitter_fakelag);
