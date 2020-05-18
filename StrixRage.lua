@@ -48,11 +48,17 @@ local StrixLua_CHANGELOG_TEXT = gui.Text(StrixRage_CHANGELOG_GBOX, http.Get("htt
 
 -- windowss
 
-local StrixRage_RAGE_GBOX = gui.Groupbox(StrixRage_TAB, "Manual AA", 290, 10, 145, 0)
+
+local StrixRage_RAGE_GBOX = gui.Groupbox(StrixRage_TAB, "Manual AA", 260, 14, 145, 0)
+
+local StrixRage_VISUALS_GBOX = gui.Groupbox(StrixRage_TAB, "Visuals", 260, 340, 145, 0)
+
+
+local StrixRage_MOVEMENT_GBOX = gui.Groupbox(StrixRage_TAB, "Movement", 20, 450, 180, 0)
 
 -- autobuy
 local ref = gui.Reference("Ragebot", "StrixRage"); 
-local Group = gui.Groupbox(ref, "Autobuy", 450, 10, 160)
+local Group = gui.Groupbox(ref, "Autobuy", 450, 14, 160)
 local checkbox_buybot = gui.Checkbox( Group, "Checkbox", "BuyBot Active",  false)
 local primary_guns = gui.Combobox( Group, "primary", "Primary", "Off", "Scar-20 | G3SG1","AK47 | M4A1", "SSG-08", "AWP", "SG553 | AUG")
 local secondary_guns = gui.Combobox( Group, "Secondary", "Secondary",  "Off", "Dual Berettas", "Deagle | Revolver", "P250","TEC-9 | CZ75-Auto" )
@@ -279,7 +285,7 @@ function DrawUI()
     yawamount = gui.Slider(groupboxyaw,"yaw_offset","Yaw Offset",0,-180,180);
     fakeamount = gui.Slider(groupboxyaw,"fake_amount","Fake Amount (%)",100,0,100);
     
-    groupboxlag = gui.Groupbox(window,"Lagsync",20,250,200,200);
+    groupboxlag = gui.Groupbox(window,"Lagsync",20,280,200,200);
     lagsyncbox = gui.Combobox(groupboxlag,"lagsync_type","Lagsync Type","Off","CT Auto","Lagsync V1","Lagsync V2","Lagsync V3","Lagsync V4","Custom");
     delayamount = gui.Slider(groupboxlag,"delay_amount","Delay Amount (ticks)",1,1,64);
     
@@ -401,3 +407,181 @@ callbacks.Register("CreateMove",lagsync);
 callbacks.Register("Draw",YawHandler);
 callbacks.Register("Draw",KeyPressHandler);
 callbacks.Register("Draw",GUIHandler);
+
+------- Visuals anti aim angles
+--- Creator: Superyu'#7167
+
+local POS = gui.Reference("Ragebot", "StrixRage", "Visuals")
+local MULTI = gui.Multibox(POS, "Antiaim lines")
+local NETWORKED = gui.Checkbox(MULTI, "vis.local.aalines.networked", "Networked Angle", false)
+local LBY = gui.Checkbox(MULTI, "vis.local.aalines.lby", "LBY", false)
+local LOCALANG = gui.Checkbox(MULTI, "vis.local.aalines.local", "Local Angle", false)
+local LASTCHOKEDANG = gui.Checkbox(MULTI, "vis.local.aalines.lastchoked", "Last Choked", false)
+
+--- Variables
+local lastChoked = nil;
+local fake = nil;
+local localAngle = nil;
+local lby = nil;
+local pLocal = entities.GetLocalPlayer();
+local choking;
+local lastChoke;
+
+--- The maths
+local function AngleVectors(angles)
+
+    local sp, sy, cp, cy;
+    local forward = { }
+
+    sy = math.sin(math.rad(angles[2]));
+	cy = math.cos(math.rad(angles[2]));
+
+	sp = math.sin(math.rad(angles[1]));
+	cp = math.cos(math.rad(angles[1]));
+
+	forward[1] = cp*cy;
+	forward[2] = cp*sy;
+    forward[3] = -sp;
+    return forward;
+end
+
+local function doShit(t1, t2, m)
+    local t3 ={};
+    for i,v in ipairs(t1) do
+        t3[i] = v + (t2[i] * m);
+    end
+    return t3;
+end
+
+local function iHateMyself(value, color, text)
+
+    local forward = {};
+    local origin = pLocal:GetAbsOrigin();
+    forward = AngleVectors({0, value, 0});
+    local end3D = doShit({origin.x, origin.y, origin.z}, forward, 25);
+    local w2sX1, w2sY1 = client.WorldToScreen(origin);
+    local w2sX2, w2sY2 = client.WorldToScreen(Vector3(end3D[1], end3D[2], end3D[3]));
+    draw.Color(color[1], color[2], color[3], color[4])
+
+    if w2sX1 and w2sY1 and w2sX2 and w2sY2 then
+        draw.Line(w2sX1, w2sY1, w2sX2, w2sY2)
+        local textW, textH = draw.GetTextSize(text);
+        draw.TextShadow( w2sX2-(textW/2), w2sY2-(textH/2), text)
+    end
+end
+
+--- Callbacks
+callbacks.Register("Draw", function()
+
+    pLocal = entities.GetLocalPlayer();
+    lby = pLocal:GetProp("m_flLowerBodyYawTarget");
+    fake = pLocal:GetProp("m_angEyeAngles");
+
+    if lastChoke and lastChoke <= globals.CurTime() - 1 then
+        choking = false;
+    end
+
+    if pLocal and pLocal:IsAlive() then
+        if lastChoked and choking and LASTCHOKEDANG:GetValue() then iHateMyself(lastChoked.y, {25, 255, 25, 255}, "Last Choked") end
+        if fake and NETWORKED:GetValue() then iHateMyself(fake.y, {255, 25, 25, 255}, "Networked") end
+        if localAngle and LOCALANG:GetValue() then iHateMyself(localAngle.y, {25, 25, 255, 255}, "Local Angle") end
+        if lby and LBY:GetValue() then iHateMyself(lby, {255, 255, 255, 255}, "LBY") end
+    end
+end)
+
+callbacks.Register("CreateMove", function(pCmd)
+    if pLocal and pLocal:IsAlive() then
+
+        if not pCmd.sendpacket then
+            lastChoked = pCmd.viewangles
+            choking = true;
+            lastChoke = globals.CurTime();
+        else
+            localAngle = pCmd.viewangles
+        end
+    end
+end)
+
+-- aa fix
+local guiRef = gui.Reference( "Ragebot", "StrixRage", "Base AA" )
+gui.Checkbox( guiRef, "aafix", "Anti-Aim Fix", true );
+
+local switch = true;
+
+local function create_move(cmd)
+    if not gui.GetValue( "rbot.master" ) then return end
+    if gui.GetValue("rbot.antiaim.advanced.aafix") and not input.IsButtonDown( "w" ) and not input.IsButtonDown( "a" ) and not input.IsButtonDown( "s" ) and not input.IsButtonDown( "d" ) and not input.IsButtonDown( "space" ) then 
+        if switch == true then
+            cmd.sidemove = 2;
+            switch = false;
+        elseif switch == false then
+            cmd.sidemove = -2;
+            switch = true;
+        end
+    end
+end
+
+callbacks.Register( "CreateMove", create_move );
+
+
+-- quickpeek
+
+local aimbot_extra = gui.Reference("Ragebot", "StrixRage", "Movement")
+
+local quickpeek_key = gui.Keybox(aimbot_extra, "C_QuickPeek.key", "QuickPeek key", 0)
+quickpeek_key:SetDescription("(ESC to clear)")
+
+function blacklisted()
+    local blacklisted_weapons = {
+        "CKnife",
+        "CMolotovGrenade",
+        "CSmokeGrenade",
+        "CHEGrenade",
+        "CFlashbang",
+        "CDecoyGrenade",
+        "CIncendiaryGrenade"
+    }
+    if not entities.GetLocalPlayer() then return true end
+    if not entities.GetLocalPlayer():IsAlive() then return true end
+    local weapon_class = entities.GetLocalPlayer():GetPropEntity("m_hActiveWeapon"):GetClass()
+    for k, blacklisted_weapon in pairs(blacklisted_weapons) do
+        if blacklisted_weapon == weapon_class then
+            return true
+        end
+    end
+    return false
+
+end
+
+
+local reset_shots = 0
+callbacks.Register("Draw", function()
+    if (input.IsButtonReleased(65) or input.IsButtonReleased(68) or (not input.IsButtonDown(65) and not input.IsButtonDown(68))) and reset_shots >= 1 then
+        reset_shots = 0
+    end
+    
+end)
+
+callbacks.Register("AimbotTarget", function()
+    reset_shots = reset_shots + 1
+end)
+
+callbacks.Register("CreateMove", function(cmd)
+    if blacklisted() then return end
+    
+    if quickpeek_key:GetValue() ~= 0 and not input.IsButtonDown(quickpeek_key:GetValue()) then
+        return
+    end
+    
+    if reset_shots >= 1 then
+        if input.IsButtonDown(65) then -- A
+            cmd.sidemove = 255
+        elseif input.IsButtonDown(68) then -- D
+            cmd.sidemove = -255
+        end
+    end
+    
+    if cmd.buttons == 4194305 then
+        reset_shots = reset_shots + 1
+    end
+end)
