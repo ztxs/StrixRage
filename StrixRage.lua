@@ -520,27 +520,3 @@ local function create_move(cmd)
 end
 
 callbacks.Register( "CreateMove", create_move );
-
----- fakelag
-
-local ref = gui.Reference("Ragebot", "StrixRage")
-
--- BOXES
-local main_box = gui.Groupbox(ref, "Fakelag Settings",20, 450, 165, 400);
-
-
---sliders
-local limit = gui.Slider(main_box, "limit", "Limit", 0, 0, 8);
-local freq = gui.Slider(main_box, "frequency", "Frequency", 0, 1, 100);
-local center = gui.Slider(main_box, "center", "Center", 0, 2, 17);
-
-
---vars
-
-local function jitter_fakelag()
-	maths = (gui.GetValue("misc.limit") * math.cos((globals.RealTime()) / (gui.GetValue("misc.frequency")*(0.01)))+ gui.GetValue("misc.center"));
-	gui.SetValue("misc.fakelag.factor", maths)
-end
-
-
-callbacks.Register("Draw", jitter_fakelag);
